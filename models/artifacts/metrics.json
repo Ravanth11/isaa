@@ -1,0 +1,44 @@
+{
+  "metrics": {
+    "0": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 2395.0
+    },
+    "1": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 605.0
+    },
+    "accuracy": 1.0,
+    "macro avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 3000.0
+    },
+    "weighted avg": {
+      "precision": 1.0,
+      "recall": 1.0,
+      "f1-score": 1.0,
+      "support": 3000.0
+    }
+  },
+  "roc_auc": 1.0,
+  "features": [
+    "request_duration_sec",
+    "connection_duration_sec",
+    "bytes_transferred",
+    "headers_count",
+    "body_bytes",
+    "time_to_first_byte_sec",
+    "request_rate",
+    "bytes_per_second",
+    "avg_time_between_requests",
+    "header_rate",
+    "last_1min_request_count",
+    "last_5min_request_count"
+  ]
+}

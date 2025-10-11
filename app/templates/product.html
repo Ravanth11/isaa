@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="product">
+  <img src="{{ product.img }}" alt="{{ product.name }}" />
+  <div class="details">
+    <h2>{{ product.name }}</h2>
+    <p class="price">${{ '%.2f'|format(product.price) }}</p>
+    <form method="post" action="/cart">
+      <input type="hidden" name="pid" value="{{ product.id }}" />
+      <button class="btn primary" type="submit">Add to Cart</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

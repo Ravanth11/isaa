@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% block content %}
+<h2>Checkout</h2>
+{% if ok %}
+<p>Thank you! Your order has been placed.</p>
+<a class="btn" href="/">Continue Shopping</a>
+{% else %}
+<p>Review your cart and confirm purchase.</p>
+<form method="post" action="/checkout">
+  <button class="btn primary" type="submit">Pay Now</button>
+</form>
+{% endif %}
+{% endblock %}

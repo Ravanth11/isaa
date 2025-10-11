@@ -1,0 +1,22 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1 class="hero">Welcome to Nimbus Shop</h1>
+<div class="grid">
+  {% for p in products %}
+  <div class="card">
+    <img src="{{ p.img }}" alt="{{ p.name }}" />
+    <div class="card-body">
+      <h3>{{ p.name }}</h3>
+      <div class="price">${{ '%.2f'|format(p.price) }}</div>
+      <div class="actions">
+        <a class="btn" href="/product/{{ p.id }}">View</a>
+        <form method="post" action="/cart">
+          <input type="hidden" name="pid" value="{{ p.id }}" />
+          <button class="btn primary" type="submit">Add to Cart</button>
+        </form>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% endblock %}

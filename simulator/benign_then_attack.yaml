@@ -1,0 +1,11 @@
+base_url: "http://localhost:8081"
+steps:
+  - { type: benign,   method: GET,  endpoint: "/",           rps: 5,  duration_sec: 15 }
+  - { type: benign,   method: GET,  endpoint: "/product/1",  rps: 5,  duration_sec: 15 }
+  - { type: benign,   method: POST, endpoint: "/cart",       rps: 3,  duration_sec: 10 }
+  - { type: benign,   method: POST, endpoint: "/checkout",   rps: 2,  duration_sec: 8 }
+  - { type: slowloris, method: GET,  endpoint: "/product/2",  rps: 6,  duration_sec: 15 }
+  - { type: slowpost,  method: POST, endpoint: "/cart",       rps: 5,  duration_sec: 15 }
+  - { type: slowread,  method: GET,  endpoint: "/product/3",  rps: 6,  duration_sec: 15 }
+  - { type: http2slow, method: GET,  endpoint: "/product/1",  rps: 6,  duration_sec: 15 }
+  - { type: benign,    method: GET,  endpoint: "/",           rps: 5,  duration_sec: 10 }
