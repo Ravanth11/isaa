@@ -1,2 +1,1 @@
-{"action": "block_ip", "ip": "127.0.0.1", "reason": "manual", "confidence": 1.0, "dry_run": true}
-{"action": "rate_limit", "ip": "127.0.0.1", "rps": 5, "dry_run": true}
+{"action": "block_ip", "ip": "27.0.0.1", "reason": "manual", "confidence": 1.0, "dry_run": true}
