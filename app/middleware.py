@@ -6,6 +6,8 @@ from datetime import datetime, timedelta, timezone
 from typing import Deque, Dict, Any
 from flask import request, g
 from models.ensemble import EnsembleDetector
+from .reputation import reputation
+from .rate_limiter import rate_limiter
 from models.explain import generate_explanation
 
 
@@ -66,6 +68,60 @@ class DetectionMiddleware:
             ip = request.headers.get('X-Forwarded-For', request.remote_addr or '0.0.0.0').split(',')[0].strip()
             method = request.method
             path = request.path
+            # Bypass detection for internal API/UI endpoints to avoid self-triggered blocking
+            if path.startswith('/api/') or path.startswith('/static/') or path in ('/dashboard', '/favicon.ico'):
+                return response
+
+            # Reputation check: immediate block if banned
+            if reputation.is_banned(ip):
+                response.status_code = 429
+                response.headers['X-Blocked'] = '1'
+                response.set_data(json.dumps({
+                    'status': 'blocked',
+                    'reason': 'reputation-ban',
+                    'confidence': 1.0
+                }))
+                response.mimetype = 'application/json'
+                event = {
+                    'timestamp': datetime.now(timezone.utc).isoformat(),
+                    'src_ip': ip,
+                    'method': method,
+                    'path': path,
+                    'status_code': response.status_code,
+                    'features': {},
+                    'decision': {'decision': 'attack', 'confidence': 0.99},
+                    'explanation': 'Banned by reputation manager.',
+                    'action': 'blocked',
+                }
+                self._log_event(event)
+                return response
+
+            # Pre-check token bucket rate limiter
+            try:
+                if rate_limiter.should_limit(ip, cost=1.0):
+                    response.status_code = 429
+                    response.headers['X-Blocked'] = '1'
+                    response.set_data(json.dumps({
+                        'status': 'blocked',
+                        'reason': 'rate-limit',
+                        'confidence': 0.9
+                    }))
+                    response.mimetype = 'application/json'
+                    event = {
+                        'timestamp': datetime.now(timezone.utc).isoformat(),
+                        'src_ip': ip,
+                        'method': method,
+                        'path': path,
+                        'status_code': response.status_code,
+                        'features': {},
+                        'decision': {'decision': 'attack', 'confidence': 0.9},
+                        'explanation': 'Blocked by token-bucket rate limiter.',
+                        'action': 'blocked',
+                    }
+                    self._log_event(event)
+                    return response
+            except Exception:
+                pass
             status = response.status_code
             headers_count = len(request.headers)
             body_bytes = int(request.content_length or 0)
@@ -122,20 +178,58 @@ class DetectionMiddleware:
             decision = self.detector.predict(features)
             explanation = generate_explanation(features, decision)
 
+            # Demo override to force an attack decision and blocking
+            demo_attack = request.headers.get('X-Demo-Attack') == '1'
+            if demo_attack:
+                decision = {
+                    **decision,
+                    'decision': 'attack',
+                    'confidence': max(decision.get('confidence', 0.0), 0.99),
+                    'rule': {**decision.get('rule', {}), 'fired': ['demo_forced_attack'], 'confidence': 1.0},
+                }
+
+            should_block = False
+            if (self.auto_mitigation and decision['decision'] == 'attack' and decision['confidence'] >= self.conf_threshold) or demo_attack:
+                should_block = True
+                try:
+                    # mutate response to indicate block
+                    response.status_code = 429
+                    response.headers['X-Blocked'] = '1'
+                    response.set_data(json.dumps({
+                        'status': 'blocked',
+                        'reason': 'auto-attack-detected',
+                        'confidence': decision['confidence']
+                    }))
+                    response.mimetype = 'application/json'
+                except Exception:
+                    pass
+
             event = {
                 'timestamp': row_features['timestamp'],
                 'src_ip': ip,
                 'method': method,
                 'path': path,
-                'status_code': status,
+                'status_code': response.status_code,
                 'features': features,
                 'decision': decision,
                 'explanation': explanation,
+                'action': 'blocked' if should_block else 'allowed',
             }
             self._log_event(event)
 
+            # Update reputation scores
+            try:
+                if decision['decision'] == 'attack':
+                    reputation.update(ip, +3.0)
+                    rate_limiter.adjust(ip, more_strict=True)
+                else:
+                    reputation.update(ip, -1.0)
+                    rate_limiter.adjust(ip, more_strict=False)
+            except Exception:
+                pass
+
             # auto mitigation (dry-run placeholder)
-            if self.auto_mitigation and decision['decision'] == 'attack' and decision['confidence'] >= self.conf_threshold:
+            if should_block:
                 from .mitigation import MitigationExecutor
                 MitigationExecutor(dry_run=True).block_ip(ip, reason='auto-attack-detected', confidence=decision['confidence'])
         except Exception:

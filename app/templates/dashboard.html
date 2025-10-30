@@ -1,0 +1,717 @@
+{% extends 'base.html' %}
+{% block content %}
+<style>
+  .dashboard-container {
+    max-width: 1800px;
+    margin: 0 auto;
+    padding: 24px;
+  }
+  
+  .dashboard-header {
+    background: linear-gradient(135deg, #0f1419 0%, #1a2332 100%);
+    padding: 28px 32px;
+    border-radius: 16px;
+    margin-bottom: 24px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+    border: 1px solid rgba(86, 217, 252, 0.2);
+  }
+  
+  .dashboard-header h2 {
+    margin: 0 0 24px 0;
+    color: #56d9fc;
+    font-size: 32px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+  }
+  
+  .controls {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+  }
+  
+  .btn {
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    background: linear-gradient(135deg, #2a3f5f 0%, #1a2f45 100%);
+    color: #fff;
+    border: 1px solid rgba(86, 217, 252, 0.3);
+  }
+  
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(86, 217, 252, 0.3);
+    border-color: #56d9fc;
+  }
+  
+  .btn.primary {
+    background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
+    border-color: rgba(220, 38, 38, 0.5);
+  }
+  
+  .btn.primary:hover {
+    background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    box-shadow: 0 6px 20px rgba(220, 38, 38, 0.4);
+  }
+  
+  .note-text {
+    font-size: 13px;
+    color: #94a3b8;
+    margin-top: 8px;
+  }
+  
+  .stats-panel {
+    background: linear-gradient(135deg, rgba(26, 40, 66, 0.5) 0%, rgba(15, 26, 37, 0.5) 100%);
+    padding: 20px 24px;
+    border-radius: 12px;
+    display: flex;
+    gap: 32px;
+    align-items: center;
+    flex-wrap: wrap;
+    border: 1px solid rgba(86, 217, 252, 0.2);
+    margin-top: 16px;
+  }
+  
+  .stat-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  
+  .stat-label {
+    font-size: 11px;
+    text-transform: uppercase;
+    color: #64748b;
+    letter-spacing: 1px;
+    font-weight: 600;
+  }
+  
+  .stat-value {
+    font-size: 24px;
+    font-weight: 700;
+  }
+  
+  .main-grid {
+    display: grid;
+    grid-template-columns: 1fr 500px;
+    gap: 24px;
+    margin-bottom: 24px;
+  }
+  
+  .panel {
+    background: linear-gradient(135deg, rgba(26, 40, 66, 0.95) 0%, rgba(15, 26, 37, 0.95) 100%);
+    border: 2px solid rgba(86, 217, 252, 0.4);
+    border-radius: 16px;
+    padding: 28px;
+    box-shadow: 0 8px 32px rgba(83, 212, 250, 0.15);
+  }
+  
+  .panel h3 {
+    margin: 0 0 16px 0;
+    color: #56d9fc;
+    font-size: 22px;
+    font-weight: 700;
+  }
+  
+  .panel-description {
+    color: #94a3b8;
+    font-size: 14px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+  }
+  
+  .llm-button {
+    width: 100%;
+    padding: 16px;
+    background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+    color: #0c1420;
+    font-weight: 800;
+    font-size: 16px;
+    border: none;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 16px rgba(6, 182, 212, 0.3);
+  }
+  
+  .llm-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(6, 182, 212, 0.5);
+    background: linear-gradient(135deg, #22d3ee 0%, #06b6d4 100%);
+  }
+  
+  .loading-text {
+    display: none;
+    color: #60a5fa;
+    font-weight: 600;
+    text-align: center;
+    margin: 20px 0;
+    font-size: 15px;
+  }
+  
+  .result-section {
+    display: none;
+    margin-top: 24px;
+  }
+  
+  .result-title {
+    font-size: 15px;
+    font-weight: 700;
+    color: #10b981;
+    margin-bottom: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  
+  .yaml-output {
+    background: #0a0f1a;
+    color: #94e2fb;
+    padding: 18px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-family: 'Courier New', monospace;
+    overflow-x: auto;
+    margin-bottom: 20px;
+    border: 1px solid rgba(86, 217, 252, 0.2);
+    line-height: 1.6;
+  }
+  
+  .explanation-box {
+    background: #0a0f1a;
+    color: #e2e8f0;
+    padding: 18px;
+    border-radius: 10px;
+    line-height: 1.7;
+    border: 1px solid rgba(86, 217, 252, 0.2);
+  }
+  
+  .table-container {
+    background: linear-gradient(135deg, rgba(15, 26, 37, 0.8) 0%, rgba(10, 15, 26, 0.8) 100%);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 24px;
+    border: 1px solid rgba(86, 217, 252, 0.2);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+  }
+  
+  .cart-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  
+  .cart-table thead {
+    background: linear-gradient(135deg, #1a2f45 0%, #0f1a25 100%);
+    border-bottom: 2px solid rgba(86, 217, 252, 0.3);
+  }
+  
+  .cart-table th {
+    padding: 16px 14px;
+    text-align: left;
+    color: #56d9fc;
+    font-weight: 700;
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  
+  .cart-table td {
+    padding: 14px;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    font-size: 14px;
+  }
+  
+  .cart-table tbody tr {
+    transition: all 0.2s ease;
+  }
+  
+  .cart-table tbody tr:hover {
+    background: rgba(86, 217, 252, 0.1);
+  }
+  
+  .row-blocked {
+    background: rgba(220, 38, 38, 0.15) !important;
+    border-left: 3px solid #dc2626;
+  }
+  
+  .row-blocked:hover {
+    background: rgba(220, 38, 38, 0.2) !important;
+  }
+  
+  .bottom-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  
+  .section-box {
+    background: linear-gradient(135deg, rgba(26, 40, 66, 0.8) 0%, rgba(15, 26, 37, 0.8) 100%);
+    border: 1px solid rgba(86, 217, 252, 0.3);
+    border-radius: 16px;
+    padding: 24px;
+    box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+  }
+  
+  .section-box h3 {
+    margin: 0 0 18px 0;
+    color: #56d9fc;
+    font-size: 18px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  
+  .input-field {
+    width: 100%;
+    padding: 12px 14px;
+    background: rgba(10, 15, 26, 0.9);
+    border: 1px solid rgba(86, 217, 252, 0.3);
+    border-radius: 8px;
+    color: #fff;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  
+  .input-field:focus {
+    outline: none;
+    border-color: #56d9fc;
+    box-shadow: 0 0 0 3px rgba(86, 217, 252, 0.1);
+  }
+  
+  .output-box {
+    background: #0a0f1a;
+    padding: 16px;
+    border-radius: 10px;
+    min-height: 120px;
+    white-space: pre-wrap;
+    color: #cbd5e1;
+    font-size: 13px;
+    line-height: 1.6;
+    margin-top: 12px;
+    border: 1px solid rgba(86, 217, 252, 0.2);
+  }
+  
+  .button-group {
+    display: flex;
+    gap: 10px;
+    margin-top: 12px;
+  }
+  
+  .button-group .btn {
+    flex: 1;
+    padding: 10px 16px;
+    font-size: 13px;
+  }
+  
+  .small-note {
+    font-size: 12px;
+    color: #64748b;
+    margin-bottom: 12px;
+    line-height: 1.5;
+  }
+  
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    margin-bottom: 16px;
+    padding: 10px;
+    background: rgba(10, 15, 26, 0.5);
+    border-radius: 8px;
+    transition: all 0.3s ease;
+  }
+  
+  .checkbox-label:hover {
+    background: rgba(86, 217, 252, 0.1);
+  }
+  
+  .checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+  }
+  
+  .checkbox-label span {
+    font-weight: 600;
+    color: #e2e8f0;
+    font-size: 15px;
+  }
+</style>
+
+<div class="dashboard-container">
+  <div class="dashboard-header">
+    <h2>🛡️ Defense Dashboard</h2>
+    
+    <div class="controls">
+      <button class="btn" id="btn-benign">Generate Normal Traffic</button>
+      <button class="btn primary" id="btn-attack">Generate Attack Traffic</button>
+      <span id="msg" style="color: #60a5fa; font-weight: 600;"></span>
+    </div>
+    
+    <div class="note-text">
+      Attack traffic will be automatically blocked (HTTP 429) and highlighted in the table below.
+    </div>
+    
+    <div class="stats-panel">
+      <div class="stat-item">
+        <span class="stat-label">All Requests</span>
+        <span class="stat-value" style="color: #56d9fc;" id="stat-all">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Benign</span>
+        <span class="stat-value" style="color: #10b981;" id="stat-benign">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Attacks</span>
+        <span class="stat-value" style="color: #ef4444;" id="stat-attack">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Blocked</span>
+        <span class="stat-value" style="color: #f59e0b;" id="stat-blocked">0</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-label">Last Updated</span>
+        <span class="stat-value" style="color: #94a3b8; font-size: 16px;" id="stat-updated">-</span>
+      </div>
+    </div>
+  </div>
+  
+  <div class="main-grid">
+    <div class="table-container">
+      <table class="cart-table" id="tbl">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>IP Address</th>
+            <th>Path</th>
+            <th>Decision</th>
+            <th>Confidence</th>
+            <th>Action</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    
+    <div class="panel" id="tune-llm-panel">
+      <h3>⚡ Auto-Tune Rules (LLM)</h3>
+      <p class="panel-description">
+        Let AI analyze recent traffic patterns and propose optimal block/rate/reputation thresholds. 
+        Review the recommended YAML configuration and LLM reasoning before applying changes.
+      </p>
+      
+      <button id="llm-tune-btn" class="llm-button">
+        ⚡ Run Auto-Tune Analysis
+      </button>
+      
+      <div id="llm-tune-loading" class="loading-text">
+        🔄 Analyzing traffic patterns and tuning rules...
+      </div>
+      
+      <div id="llm-tune-result" class="result-section">
+        <div>
+          <div class="result-title">📋 YAML Recommendation:</div>
+          <pre id="llm-tune-yaml" class="yaml-output"></pre>
+        </div>
+        <div>
+          <div class="result-title">💡 Explanation:</div>
+          <div id="llm-tune-expl" class="explanation-box"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <div class="bottom-grid">
+    <div class="section-box">
+      <h3>📊 Explain Selected</h3>
+      <div id="explain-box" class="output-box">Click on any row in the table above to see detailed analysis.</div>
+    </div>
+    
+    <div class="section-box">
+      <h3>💬 Ask Events</h3>
+      <input id="q" class="input-field" placeholder="e.g., top blocked IPs in last minute"/>
+      <button class="btn" id="btn-ask" style="margin-top: 12px; width: 100%;">Ask Question</button>
+      <div id="qa" class="output-box"></div>
+      
+      <div class="button-group">
+        <button class="btn" id="btn-rules">Generate Rules</button>
+        <button class="btn" id="btn-report">Incident Report</button>
+      </div>
+      <div id="rules" class="output-box" style="font-family: 'Courier New', monospace;"></div>
+    </div>
+    
+    <div class="section-box">
+      <h3>⭐ Reputation</h3>
+      <div class="small-note">Higher score indicates more suspicious behavior. Auto-ban triggered at threshold.</div>
+      <table class="cart-table" id="rep">
+        <thead>
+          <tr>
+            <th>IP</th>
+            <th>Score</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+    
+    <div class="section-box">
+      <h3>⏱️ Rate Limiter</h3>
+      <label class="checkbox-label">
+        <input type="checkbox" id="rl-enabled" checked>
+        <span>Enabled</span>
+      </label>
+      <table class="cart-table" id="rl">
+        <thead>
+          <tr>
+            <th>IP</th>
+            <th>Tokens</th>
+            <th>Capacity</th>
+            <th>Refill/s</th>
+            <th>Limited</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script>
+const tblBody = document.querySelector('#tbl tbody');
+const fmtTime = ts => new Date(ts).toLocaleTimeString();
+const $ = id => document.getElementById(id);
+let selectedEvent = null;
+
+async function fetchEvents() {
+  let data = { events: [] };
+  try {
+  const res = await fetch(`/api/events?limit=100&t=${Date.now()}`, { cache: 'no-store' });
+    data = await res.json();
+  } catch (e) {
+    console.error('Failed to load events', e);
+    $('msg').textContent = 'Failed to load events';
+    return;
+  }
+  const evs = data.events || [];
+  $('msg').textContent = `Loaded ${evs.length} events`;
+
+  let benign=0, attack=0, blocked=0;
+  tblBody.innerHTML = '';
+  for (const e of evs.reverse()) {
+    const dec = (e.decision && e.decision.decision) ? e.decision.decision : 'benign';
+    if (dec === 'attack') attack++; else benign++;
+    if (e.action === 'blocked') blocked++;
+    const tr = document.createElement('tr');
+    if (e.action === 'blocked') tr.className = 'row-blocked';
+    tr.style.cursor = 'pointer';
+    tr.innerHTML = `
+      <td>${fmtTime(e.timestamp)}</td>
+      <td>${e.src_ip}</td>
+      <td>${e.path}</td>
+      <td style="font-weight:bold; color:${dec==='attack'?'#ef4444':'#10b981'}">${dec}</td>
+      <td>${(((e.decision && e.decision.confidence) ? e.decision.confidence : 0)).toFixed(2)}</td>
+      <td>${e.action||'allowed'}</td>
+      <td>${e.status_code}</td>`;
+    tr.addEventListener('click', ()=> { selectedEvent = e; explainSelected(); });
+    tblBody.appendChild(tr);
+  }
+  $('stat-all').textContent = benign + attack;
+  $('stat-benign').textContent = benign;
+  $('stat-attack').textContent = attack;
+  $('stat-blocked').textContent = blocked;
+  $('stat-updated').textContent = new Date().toLocaleTimeString();
+}
+
+setInterval(fetchEvents, 2000);
+fetchEvents();
+
+async function burst(count, headers) {
+  let blocked=0;
+  for (let i=0;i<count;i++) {
+    try {
+      const res = await fetch('/health', { headers });
+      if (res.status === 429) blocked++;
+    } catch(e){}
+  }
+  $('msg').textContent = `Sent ${count} requests. Blocked: ${blocked}`;
+  setTimeout(()=> $('msg').textContent='', 4000);
+}
+
+document.getElementById('btn-benign').addEventListener('click', ()=> burst(20, {}));
+document.getElementById('btn-attack').addEventListener('click', ()=> burst(60, {
+  'X-Simulate-Request-Duration': '6',
+  'X-Simulate-Connection-Duration': '10',
+  'X-Simulate-Headers-Count': '220',
+  'X-Demo-Attack': '1'
+}));
+
+async function explainSelected(){
+  if(!selectedEvent){ $('explain-box').textContent = 'Click on any row in the table above to see detailed analysis.'; return; }
+  $('explain-box').textContent = 'Analyzing event...';
+  try{
+    const res = await fetch('/api/explain', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({event: selectedEvent})});
+    const data = await res.json();
+    $('explain-box').textContent = (data && data.text) ? data.text : 'No explanation available.';
+  }catch(err){
+    console.error('Explain error', err);
+    $('explain-box').textContent = 'Error getting explanation.';
+  }
+}
+
+$('btn-ask').addEventListener('click', async ()=>{
+  const q = $('q').value;
+  $('qa').textContent = 'Processing query...';
+  try{
+    const res = await fetch('/api/query', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({question: q})});
+    const data = await res.json();
+    $('qa').textContent = (data && data.text) ? data.text : 'No answer available.';
+  }catch(err){
+    console.error('Ask error', err);
+    $('qa').textContent = 'Error getting answer.';
+  }
+});
+
+$('btn-rules').addEventListener('click', async ()=>{
+  $('rules').textContent = 'Generating rules...';
+  const res = await fetch('/api/rules/propose', { method:'POST' });
+  const data = await res.json();
+  $('rules').textContent = data.yaml || 'No proposal.';
+});
+
+$('btn-report').addEventListener('click', async ()=>{
+  $('qa').textContent = 'Generating incident report...';
+  const res = await fetch('/api/report');
+  const data = await res.json();
+  $('qa').textContent = data.text || 'No report available.';
+});
+
+async function refreshReputation(){
+  const res = await fetch('/api/reputation?limit=20', { cache:'no-store' });
+  const data = await res.json();
+  const tbody = document.querySelector('#rep tbody');
+  tbody.innerHTML = '';
+  for(const row of (data.top||[])){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.ip}</td>
+      <td>${row.score.toFixed(2)}</td>
+      <td>${row.banned?'banned':'active'}</td>
+      <td>
+        ${row.banned ? `<button class="btn" data-ip="${row.ip}" data-act="unban">Unban</button>` : `<button class="btn" data-ip="${row.ip}" data-act="ban">Ban</button>`}
+      </td>`;
+    tbody.appendChild(tr);
+  }
+  tbody.querySelectorAll('button').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      const ip = btn.getAttribute('data-ip');
+      const act = btn.getAttribute('data-act');
+      await fetch(`/api/${act}`, { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ ip })});
+      refreshReputation();
+    });
+  });
+}
+
+setInterval(refreshReputation, 3000);
+refreshReputation();
+
+async function refreshRateLimiter(){
+  const res = await fetch('/api/ratelimit?limit=20', { cache:'no-store' });
+  const data = await res.json();
+  const tbody = document.querySelector('#rl tbody');
+  tbody.innerHTML='';
+  const enabled = !!data.enabled;
+  const box = $('rl-enabled');
+  if (box) { box.checked = enabled; }
+  for(const row of (data.top||[])){
+    const tr = document.createElement('tr');
+    tr.innerHTML = `
+      <td>${row.ip}</td>
+      <td>${row.tokens.toFixed(1)}</td>
+      <td>${row.capacity.toFixed(1)}</td>
+      <td>${row.refill_per_sec.toFixed(2)}</td>
+      <td>${row.limited}</td>`;
+    tbody.appendChild(tr);
+  }
+}
+setInterval(refreshRateLimiter, 3000);
+refreshRateLimiter();
+
+$('rl-enabled').addEventListener('change', async (e)=>{
+  await fetch('/api/ratelimit/toggle', { method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({ enabled: e.target.checked })});
+  refreshRateLimiter();
+});
+
+(function(){
+ const btn = document.getElementById('llm-tune-btn');
+ const box = document.getElementById('llm-tune-result');
+ const spinner = document.getElementById('llm-tune-loading');
+ btn.onclick = async function(){
+   btn.disabled = true;
+   btn.textContent = '⏳ Analyzing...';
+   spinner.style.display = 'block';
+   box.style.display = 'none';
+   try {
+     const res = await fetch('/api/llm_tune_rules', { method:'POST' });
+     const data = await res.json();
+     document.getElementById('llm-tune-yaml').textContent = data.tuned_yaml || 'No YAML configuration generated.';
+     document.getElementById('llm-tune-expl').textContent = data.explanation || 'No explanation provided.';
+     box.style.display = 'block';
+   } catch(e) {
+     document.getElementById('llm-tune-yaml').textContent = 'Error: Unable to contact LLM server.';
+     document.getElementById('llm-tune-expl').textContent = 'Please check your connection and try again.';
+     box.style.display = 'block';
+   }
+   spinner.style.display = 'none';
+   btn.disabled = false;
+   btn.textContent = '⚡ Run Auto-Tune Analysis';
+ };
+})();
+
+function generateMockEvent(isAttack = false) {
+  // Truly randomized each call—not just picked from lists
+  function randomIP(){
+    return [10 + Math.floor(Math.random()*190),
+            Math.floor(Math.random()*256),
+            Math.floor(Math.random()*256),
+            1 + Math.floor(Math.random()*254)].join('.')
+  }
+  function randomPath() {
+    // Weight toward API, product/numeric deep endpoints
+    const bases = ['/api/data', '/health', '/login', '/admin', '/api/users', '/report', '/config', '/submit', '/search', '/order', '/product/'];
+    let base = bases[Math.floor(Math.random()*bases.length)];
+    if(Math.random()>0.3 || base.endsWith('/')) base += Math.floor(Math.random()*5000 + 1000*Math.random());
+    if(Math.random() > 0.6) base += '?s=' + (Math.random()+1).toString(36).substr(2,3);
+    return base;
+  }
+  // Allow >99% float span
+  let confidence = isAttack 
+        ? (0.65 + Math.random()*0.35 + 0.01*Math.random()) 
+        : (0.02 + Math.random()*0.6 + 0.04*Math.random());
+  confidence = Math.min(1,Math.max(0.01,confidence));
+
+  return {
+    id: eventId++,
+    timestamp: Date.now(),
+    src_ip: randomIP(),
+    path: randomPath(),
+    decision: {
+      decision: isAttack ? 'attack' : 'benign',
+      confidence
+    },
+    action: isAttack ? 'blocked' : 'allowed',
+    status_code: isAttack ? 429 : 200
+  };
+}
+</script>
+{% endblock %}
